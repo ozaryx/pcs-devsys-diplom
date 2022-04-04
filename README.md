@@ -215,7 +215,7 @@ Success! Data written to: pki_int/roles/sysadm-dot-local
 
 Request a new certificate for the www.sysadm.local domain based on the sysadm-dot-local role.
 ```
-~# vault write pki_int/issue/sysadm-dot-local common_name="www.sysadm.local" ttl="720h"
+~# vault write pki_int/issue/sysadm-dot-local common_name="www.sysadm.local" ttl="720h" > www.sysadm.local.cert
 Key                 Value
 ---                 -----
 ca_chain            [-----BEGIN CERTIFICATE-----
@@ -317,19 +317,10 @@ serial_number       64:e7:a6:99:33:6c:0c:99:3a:31:cc:72:ff:8b:f2:73:2c:91:d9:a2
 
 The response displays the PEM-encoded private key, key type and certificate serial number.
 
-Request another certificate and save the serial number in the file /track-files/cert-serial-number.txt.
-```
-~# vault write -format=json \
-  pki_int/issue/sysadm-dot-local \
-  common_name="www.sysadm.local" \
-  ttl="720h" | jq -r ".data.serial_number" \
-  > /track-files/cert-serial-number.txt
-```
-
 
 5. Установите корневой сертификат созданного центра сертификации в доверенные в хостовой системе.
 
-Не представляется возможным
+Импортировать сертификат центра сертификации из www.sysadm.local.cert в бразуере.
 
 6. Установите nginx.
 
@@ -366,8 +357,8 @@ server {
     listen              10.0.2.15:80;
     listen              443 ssl;
     server_name         www.sysadm.local;
-    ssl_certificate     www.sysadm.local.crt;
-    ssl_certificate_key www.sysadm.local.key;
+    ssl_certificate     "/etc/pki/nginx/www.sysadm.local.cert";
+    ssl_certificate_key "/etc/pki/nginx/www.sysadm.local.cert";
     ssl_protocols       TLSv1.1 TLSv1.2;
     ssl_ciphers         HIGH:!aNULL:!MD5;
     
@@ -390,7 +381,9 @@ server {
 cat /root/create_cert.sh
 
 #!/usr/bin/env bash
-openssl
+
+vault write pki_int/issue/sysadm-dot-local common_name="www.sysadm.local" ttl="720h" > /etc/pki/nginx/www.sysadm.local.cert
+
 systemctl restart nginx
 ```
 
