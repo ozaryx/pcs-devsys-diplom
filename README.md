@@ -405,8 +405,6 @@ Vagrant.configure("2") do |config|
     chmod 400 /root/.vault-token
 
     /vagrant_data/setup_vault.sh
-    cp /vagrant_data/create_cert.sh /root
-    chmod 700 /root/create_cert.sh
 
     if [ ! -f /var/www/netology/index.html ]; then cp -r /vagrant_data/www/netology /var/www; fi
     if [ ! -f /etc/nginx/sites-available/netology ]; then cp /vagrant_data/nginx/netology /etc/nginx/sites-available; fi
@@ -415,6 +413,8 @@ Vagrant.configure("2") do |config|
 
     systemctl restart nginx
     
+    cp /vagrant_data/create_cert.sh /root
+    chmod 700 /root/create_cert.sh
     if [[ $(grep -c "create_cert.sh") -eq 0 ]]; then
       echo "*/10 * * * * /root/create_cert.sh" >> /var/spool/cron/crontabs/root
     fi
