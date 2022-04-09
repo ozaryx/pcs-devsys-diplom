@@ -1,0 +1,15 @@
+server {
+    listen              10.0.2.15:80;
+    listen              192.168.56.20:80;
+#    listen              443 ssl;
+    server_name         www.sysadm.local;
+#    ssl_certificate     www.sysadm.local.crt;
+#    ssl_certificate_key www.sysadm.local.key;
+#    ssl_protocols       TLSv1.1 TLSv1.2;
+#    ssl_ciphers         HIGH:!aNULL:!MD5;
+    
+    location / {
+        root /var/www/netology;
+    }    
+
+}

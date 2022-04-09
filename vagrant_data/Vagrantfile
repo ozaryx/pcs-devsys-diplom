@@ -1,0 +1,62 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-20.04"
+
+  # config.vm.network "forwarded_port", guest: 80, host: 8080
+  # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
+  config.vm.network "private_network", ip: "192.168.56.20"
+  # config.vm.network "public_network"
+  config.vm.synced_folder "data/", "/vagrant_data"
+  # config.vm.network "forwarded_port", guest: 19999, host: 19999
+  # config.vm.network "forwarded_port", guest: 9100, host: 9100
+  config.vm.network "forwarded_port", guest: 80, host:58080
+  config.vm.network "forwarded_port", guest: 443, host:58443
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 1524
+    v.cpus = 3
+  end
+
+  # config.vm.provider "virtualbox" do |vb|
+  #   # Display the VirtualBox GUI when booting the machine
+  #   vb.gui = true
+  #
+  #   # Customize the amount of memory on the VM:
+  #   vb.memory = "1024"
+  # end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install -y ufw nginx unzip
+
+    ufw allow in on eth0 to 10.0.2.15
+    ufw allow in on eth1 to 192.168.56.20 port 22
+    ufw allow in on eth1 to 192.168.56.20 port 80
+    ufw allow in on eth1 to 192.168.56.20 port 443
+    echo y | ufw enable
+
+    unzip /vagrant_data/vault_1.9.3_linux_amd64.zip -d /usr/bin
+    chmod 700 /usr/bin/vault
+
+    vault server -dev -dev-root-token-id root &
+    sleep 15
+
+    echo root > /root/.vault-token
+
+    /vagrant_data/setup_vault.sh
+    cp /vagrant_data/create_cert.sh /root
+    chmod 700 /root/create_cert.sh
+
+    if [ ! -f /var/www/netology/index.html ]; then cp -r /vagrant_data/www/netology /var/www; fi
+    if [ ! -f /etc/nginx/sites-available/netology ]; then cp /vagrant_data/nginx/netology /etc/nginx/sites-available; fi
+    if [ -L /etc/nginx/sites-enabled/default ]; then /etc/nginx/sites-enabled/default; fi
+    if [ ! -L /etc/nginx/sites-enabled/netology ]; then ln -s /etc/nginx/sites-available/netology /etc/nginx/sites-enabled; fi
+
+    systemctl restart nginx
+
+    # curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
+    # apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+    # apt-get update && sudo apt-get install vault
+  SHELL
+end
