@@ -371,13 +371,9 @@ vagrant ~# crontab -l
 Vagrant.configure("2") do |config|
   config.vm.box = "bento/ubuntu-20.04"
 
-  # config.vm.network "forwarded_port", guest: 80, host: 8080
-  # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
   config.vm.network "private_network", ip: "192.168.56.20"
   # config.vm.network "public_network"
   config.vm.synced_folder "data/", "/vagrant_data"
-  # config.vm.network "forwarded_port", guest: 19999, host: 19999
-  # config.vm.network "forwarded_port", guest: 9100, host: 9100
   config.vm.network "forwarded_port", guest: 80, host:58080
   config.vm.network "forwarded_port", guest: 443, host:58443
   config.vm.provider "virtualbox" do |v|
